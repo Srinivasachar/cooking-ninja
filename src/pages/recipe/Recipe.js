@@ -17,19 +17,27 @@ const [error, setError] = useState(false)
 
 useEffect( () => {
   setIsPending(true)
-  projectFirestore.collection('recipes').doc(id).get().then((doc) => {
+  const unsub = projectFirestore.collection('recipes').doc(id).onSnapshot((doc) => {
     if(doc.exists){
       setRecipe(doc.data())
     } else {
       setError("Couldn't find the recipe")
     }
     setIsPending(false)
-  }).catch((err) => {
+  }, (err) => {
     setError(err.message)
     setIsPending(false)
   })
+
+  return () => unsub()
 },[id])
 
+
+const handleEdit = () => {
+  projectFirestore.collection('recipes').doc(id).update({
+    title: "Changed title with edit"
+  })
+}
   return (
     <div className={`recipe ${mode}`}>
         {error && <p className='error'>{error}</p>}
@@ -42,6 +50,8 @@ useEffect( () => {
                     {recipe.ingredients.map(ing => <li key={ing}>{ing}</li>)}
                 </ul>
                 <p className='method'>{recipe.method}</p>
+                <button class='btn' 
+                onClick={handleEdit}>Update title</button>
             </>
         )}
     </div>
